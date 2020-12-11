@@ -7,16 +7,29 @@ import requests, csv
 def randomize_sleep(min, max):
     sleep(randint(min*100, max*100) / 100)
 
-def web_scraper(province_territory):
+def web_scraper():
     limousines = []
     
-    PATH = "/home/daggerpov/Documents/GitHub/Wedding-Scraper/chromedriver"
+    PATH = "/home/daggerpov/Documents/GitHub/Limousine-Scraper/chromedriver"
     driver = webdriver.Chrome(PATH)
     
     driver.get('https://www.limousineworldwide.directory/search_results')
     randomize_sleep(4, 5)
 
-    url = 'https://www.limousineworldwide.directory/search_results'
+    while True:
+        try:
+            driver.find_element_by_xpath('//div[@class="btn btn-primary btn-block btn-lg bold clickToLoadMoreBtn"]').click()
+            randomize_sleep(4, 5)
+        except:
+            break
+    
+    sel_limousines = driver.find_elements_by_xpath('//div[@class="grid_element"]')
+
+    for limo in sel_limousines:
+        print(limo)
+        exit()
+
+    '''url = 'https://www.limousineworldwide.directory/search_results'
     while True:
         header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
@@ -25,26 +38,17 @@ def web_scraper(province_territory):
 
         soup = BeautifulSoup(response.text, "html5lib")
 
-        for limo in soup.select("fieldset"):
-            limousines.append(limo)
-        
-        try:
-            next_page_button = driver.find_element_by_xpath("//a[contains(text(), 'Next page')]")
-            randomize_sleep(1, 2)
-            if next_page_button:
-                url = next_page_button.get_attribute('href')
-                next_page_button.click()
-                randomize_sleep(1, 2)
-        except:
-            break
+        for limo in sel_limousines:
+            limousines.append(limo)'''
+
     driver.quit()
     return limousines
 
 def retrieve_info(limo):
     pass
 
-def csv_entry(province_territory, limousines): 
-    limousines = web_scraper(province_territory)
+def csv_entry(limousines): 
+    limousines = web_scraper()
     
     #clears spreadsheet
     with open(f"./limousines/limousines.csv", "w", encoding="utf-8", newline="") as f:
@@ -62,10 +66,17 @@ def csv_entry(province_territory, limousines):
 #this first function may seem redundant, but I need it to pass in these variables for the 
 #province_territory so that the index resets for every province_territory entered. 
 
-def scrape(province_territory):
+def scrape():
     
-    limousines = web_scraper(province_territory)
+    limousines = web_scraper()
         
-    csv_entry(province_territory, limousines)
+    #csv_entry(limousines)
 
     exit()
+
+def main():
+    scrape()
+
+if __name__ == '__main__':
+    main()
+
