@@ -7,9 +7,7 @@ import requests, csv
 def randomize_sleep(min, max):
     sleep(randint(min*100, max*100) / 100)
 
-def web_scraper():
-    limousines = []
-    
+def web_scraper():    
     PATH = "/home/daggerpov/Documents/GitHub/Limousine-Scraper/chromedriver"
     driver = webdriver.Chrome(PATH)
     
@@ -23,43 +21,67 @@ def web_scraper():
         except:
             break
     
-    sel_limousines = driver.find_elements_by_xpath('//div[@class="grid_element"]')
+    sel_limousines = driver.find_elements_by_xpath('//a[@class="center-block"]')
+    limousines_links = []
+    for i in sel_limousines:
+        limousines_links.append(i.get_attribute('href'))
 
-    for limo in sel_limousines:
-        print(limo)
-        exit()
+    randomize_sleep(5, 6)
+    
+    return limousines_links, driver
 
-    '''url = 'https://www.limousineworldwide.directory/search_results'
-    while True:
-        header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
+def retrieve_info(limo_link, driver):    
+    driver.get(limo_link)
+    randomize_sleep(15, 16)
 
-        response = requests.get(url, headers=header)
-        if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason); exit()
+    header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
+    response = requests.get(limo_link, headers=header)
+    if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason) #no exit
+
+    else:
         soup = BeautifulSoup(response.text, "html5lib")
 
-        for limo in sel_limousines:
-            limousines.append(limo)'''
+        try:
+            name = driver.find_element_by_xpath('//h1[@class="bold inline-block"]').text.replace('"', '')
+        except:name=''
 
-    driver.quit()
-    return limousines
+        try:
+            company_type = soup.select("span.profile-header-top-category")[0].text.replace('"', '')
+        except:company_type=''
 
-def retrieve_info(limo):
-    pass
+        try:
+            location = soup.select("span.profile-header-location")[0].text[1:].replace('"', '')
+        except:location=''
 
-def csv_entry(limousines): 
-    limousines = web_scraper()
+        try:
+            driver.find_element_by_xpath('//div[@class="myphoneHide"]').click()
+            randomize_sleep(6, 7)
+            phone_number = driver.find_element_by_css_selector("a.btn-block > u").text.replace('"', '')
+        except:phone_number=''
+
+        try:
+            website = driver.find_element_by_xpath('//a[@class="weblink"][@title="website"][@rel="nofollow"][@itemprop="url"]').get_attribute('href')
+            randomize_sleep(4, 5)
+        except:website = ''
+
+        
+        randomize_sleep(7, 8)
+
+    return [name, company_type, location, phone_number, website]
+
+def csv_entry(limousines_links, driver): 
     
     #clears spreadsheet
-    with open(f"./limousines/limousines.csv", "w", encoding="utf-8", newline="") as f:
+    with open(f"./limousines.csv", "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerows([])
 
-    for limo in limousines: 
+    for limo_link in limousines_links: 
         table = []
-        table.append(retrieve_info(limo))
+        table.append(retrieve_info(limo_link, driver))
 
-        with open(f"./limousines/limousines.csv", "a", encoding="utf-8", newline="") as f:
+        with open(f"./limousines.csv", "a", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
             writer.writerows(table)
 
@@ -68,9 +90,9 @@ def csv_entry(limousines):
 
 def scrape():
     
-    limousines = web_scraper()
+    limousines_links, driver = web_scraper()
         
-    #csv_entry(limousines)
+    csv_entry(limousines_links, driver)
 
     exit()
 
