@@ -32,12 +32,14 @@ def web_scraper():
 
 def retrieve_info(limo_link, driver):    
     driver.get(limo_link)
-    randomize_sleep(15, 16)
+    randomize_sleep(5, 6)
 
     header = {"From": "Daniel Agapov <danielagapov1@gmail.com>"}
 
     response = requests.get(limo_link, headers=header)
-    if response.status_code != 200: print("Failed to get HTML:", response.status_code, response.reason) #no exit
+    if response.status_code != 200: 
+        print("Failed to get HTML:", response.status_code, response.reason) #no exit
+        name, company_type, location, phone_number, website = '', '', '', '', ''
 
     else:
         soup = BeautifulSoup(response.text, "html5lib")
@@ -56,19 +58,15 @@ def retrieve_info(limo_link, driver):
 
         try:
             driver.find_element_by_xpath('//div[@class="myphoneHide"]').click()
-            randomize_sleep(6, 7)
+            randomize_sleep(2, 3)
             phone_number = driver.find_element_by_css_selector("a.btn-block > u").text.replace('"', '')
         except:phone_number=''
 
         try:
             website = driver.find_element_by_xpath('//a[@class="weblink"][@title="website"][@rel="nofollow"][@itemprop="url"]').get_attribute('href')
-            randomize_sleep(4, 5)
         except:website = ''
 
-        
-        randomize_sleep(7, 8)
-
-    return [name, company_type, location, phone_number, website]
+    return [name, company_type, location, website, phone_number]
 
 def csv_entry(limousines_links, driver): 
     
