@@ -21,12 +21,8 @@ def web_scraper():
         except:
             break
     
-    sel_limousines = driver.find_elements_by_xpath('//a[@class="center-block"]')
-    limousines_links = []
-    for i in sel_limousines:
-        limousines_links.append(i.get_attribute('href'))
-
-    randomize_sleep(5, 6)
+    limousines_links = [x.get_attribute('href') for x in driver.find_elements_by_xpath('//a[@class="center-block"]')]
+    randomize_sleep(3, 4)
     
     return limousines_links, driver
 
@@ -45,58 +41,46 @@ def retrieve_info(limo_link, driver):
         soup = BeautifulSoup(response.text, "html5lib")
 
         try:
-            name = driver.find_element_by_xpath('//h1[@class="bold inline-block"]').text.replace('"', '')
+            name = driver.find_element_by_xpath('//h1[@class="bold inline-block"]').text
         except:name=''
 
         try:
-            company_type = soup.select("span.profile-header-top-category")[0].text.replace('"', '')
+            company_type = soup.select("span.profile-header-top-category")[0].text
         except:company_type=''
 
         try:
-            location = soup.select("span.profile-header-location")[0].text[1:].replace('"', '')
+            location = soup.select("span.profile-header-location")[0].text[1:]
         except:location=''
 
         try:
             driver.find_element_by_xpath('//div[@class="myphoneHide"]').click()
             randomize_sleep(2, 3)
-            phone_number = driver.find_element_by_css_selector("a.btn-block > u").text.replace('"', '')
+            phone_number = driver.find_element_by_css_selector("a.btn-block > u").text
         except:phone_number=''
 
         try:
             website = driver.find_element_by_xpath('//a[@class="weblink"][@title="website"][@rel="nofollow"][@itemprop="url"]').get_attribute('href')
         except:website = ''
 
-    return [name, company_type, location, website, phone_number]
+    return [name, company_type, location, phone_number, website]
 
-def csv_entry(limousines_links, driver): 
-    
+def csv_entry(limousines_links, driver):
     #clears spreadsheet
     with open(f"./limousines.csv", "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerows([])
 
+    #takes out " from strings and appends limo info to the empty csv file
     for limo_link in limousines_links: 
-        table = []
-        table.append(retrieve_info(limo_link, driver))
-
         with open(f"./limousines.csv", "a", encoding="utf-8", newline="") as f:
             writer = csv.writer(f)
-            writer.writerows(table)
-
-#this first function may seem redundant, but I need it to pass in these variables for the 
-#province_territory so that the index resets for every province_territory entered. 
+            writer.writerows([retrieve_info(limo_link, driver)])
 
 def scrape():
-    
     limousines_links, driver = web_scraper()
         
     csv_entry(limousines_links, driver)
 
-    exit()
-
-def main():
-    scrape()
-
 if __name__ == '__main__':
-    main()
+    scrape()
 
